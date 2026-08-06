@@ -1,0 +1,14 @@
+[build]
+  command = "npm run build"
+  publish = "out"
+
+# Ce projet utilise output: "export" (export 100% statique), donc on
+# désactive le plugin/runtime Next.js de Netlify (pensé pour le SSR) pour
+# publier simplement le dossier "out/" comme un site statique classique.
+[build.environment]
+  NETLIFY_NEXT_PLUGIN_SKIP = "true"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"

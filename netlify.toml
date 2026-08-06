@@ -1,0 +1,11 @@
+[build]
+  publish = "site"
+  # Netlify régénère lui-même le dashboard à chaque déploiement (déclenché
+  # par un push GitHub Actions) : évite de committer le HTML généré
+  # (~1,5 Mo) à chaque cycle, seuls les CSV (petits deltas) sont poussés.
+  command = "pip install requests && python3 generate_dashboard.py && cp weather_dashboard.html site/index.html"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"

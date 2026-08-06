@@ -1,0 +1,46 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --background: #f7f7f5;
+  --foreground: #2c2c2c;
+  --card: #ffffff;
+  --border: #e0e0e0;
+  --muted: #7f8c8d;
+  --thead-bg: #fafafa;
+  --thead-bg-hover: #f0f0f0;
+  --row-hover: #fafafa;
+  --row-border: #f0f0f0;
+}
+
+.dark {
+  --background: #14161a;
+  --foreground: #e6e6e6;
+  --card: #1e2126;
+  --border: #2f333b;
+  --muted: #9aa0a6;
+  --thead-bg: #24272e;
+  --thead-bg-hover: #2b2f37;
+  --row-hover: #262a31;
+  --row-border: #2a2e35;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-border: var(--border);
+  --color-muted: var(--muted);
+  --color-thead: var(--thead-bg);
+  --color-thead-hover: var(--thead-bg-hover);
+  --color-row-hover: var(--row-hover);
+  --color-row-border: var(--row-border);
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}

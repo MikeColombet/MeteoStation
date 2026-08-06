@@ -1,0 +1,65 @@
+name: Récupération météo et publication
+
+on:
+  schedule:
+    # Toutes les 15 minutes. GitHub peut retarder légèrement le déclenchement
+    # en cas de forte charge sur son infrastructure (limite connue du cron
+    # GitHub Actions, pas un bug de ce workflow).
+    - cron: "*/15 * * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: meteo-fetch-deploy
+  cancel-in-progress: false
+
+jobs:
+  fetch-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Installer les dépendances
+        run: pip install requests
+
+      - name: Récupérer les données actuelles
+        run: python3 fetch_weather.py
+
+      - name: Combler un éventuel trou (auto-cicatrisation)
+        run: python3 seed_history.py
+
+      - name: Committer et pousser les CSV mis à jour
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add weather_data_*.csv
+          git diff --cached --quiet || git commit -m "Mise à jour automatique des données météo"
+          git push
+
+      - name: Générer le dashboard
+        run: |
+          python3 generate_dashboard.py
+          mkdir -p _site
+          cp weather_dashboard.html _site/index.html
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Déployer sur GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
