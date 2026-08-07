@@ -288,6 +288,37 @@ function series(data, key) {
   return data.map(d => d[key]);
 }
 
+// Horodatage "YYYY-MM-DDTHH:MM" → ms, traité comme UTC pour être
+// indépendant du fuseau du visiteur (on ne calcule que des durées
+// relatives, jamais une heure absolue affichée).
+function parseTs(ts) {
+  const [datePart, timePart] = ts.split("T");
+  const [y, mo, d] = datePart.split("-").map(Number);
+  const [h, mi] = timePart.split(":").map(Number);
+  return Date.UTC(y, mo - 1, d, h, mi);
+}
+
+// Moyenne mobile sur une fenêtre glissante de 24h (en temps réel, pas en
+// nombre de points, pour rester correcte même avec un échantillonnage
+// irrégulier : historique horaire, relevés 15 min, etc.)
+function movingAverage24h(data, key) {
+  const WINDOW_MS = 24 * 60 * 60 * 1000;
+  const times = data.map(d => parseTs(d.timestamp));
+  const result = new Array(data.length).fill(null);
+  let sum = 0, count = 0, left = 0;
+  for (let i = 0; i < data.length; i++) {
+    const v = data[i][key];
+    if (v !== null && v !== undefined) { sum += v; count++; }
+    while (times[left] < times[i] - WINDOW_MS) {
+      const lv = data[left][key];
+      if (lv !== null && lv !== undefined) { sum -= lv; count--; }
+      left++;
+    }
+    result[i] = count > 0 ? sum / count : null;
+  }
+  return result;
+}
+
 // --- Thème clair / sombre ---
 function getStoredTheme() {
   const stored = localStorage.getItem(THEME_KEY);
@@ -375,6 +406,7 @@ function buildTraces(data) {
     temp: [
       { x: timestamps, y: s("temperature_2m"), name: "Température (°C)", mode: "lines", line: { color: "#c0392b", width: 1.5 } },
       { x: timestamps, y: s("apparent_temperature"), name: "Ressenti (°C)", mode: "lines", line: { color: "#b8860b", width: 1.3 } },
+      { x: timestamps, y: movingAverage24h(data, "temperature_2m"), name: "Moyenne mobile 24h (°C)", mode: "lines", line: { color: "#34495e", width: 2, dash: "dash" } },
       { x: timestamps, y: s("relative_humidity_2m"), name: "Humidité (%)", mode: "lines", line: { color: "#2980b9", width: 1.1 }, yaxis: "y2", opacity: 0.6 },
     ],
     wind: [

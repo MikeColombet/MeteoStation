@@ -28,6 +28,48 @@ const COLUMNS: { key: keyof WeatherRow; label: string }[] = [
   { key: "weather_code", label: "Code météo" },
 ];
 
+// Horodatage "YYYY-MM-DDTHH:MM" → ms, traité comme UTC pour être
+// indépendant du fuseau du visiteur (on ne calcule que des durées
+// relatives, jamais une heure absolue affichée).
+function parseTs(ts: string): number {
+  const [datePart, timePart] = ts.split("T");
+  const [y, mo, d] = datePart.split("-").map(Number);
+  const [h, mi] = timePart.split(":").map(Number);
+  return Date.UTC(y, mo - 1, d, h, mi);
+}
+
+// Moyenne mobile sur une fenêtre glissante de 24h (en temps réel, pas en
+// nombre de points, pour rester correcte même avec un échantillonnage
+// irrégulier : historique horaire, relevés 15 min, etc.)
+function movingAverage24h(
+  data: WeatherRow[],
+  key: keyof WeatherRow,
+): (number | null)[] {
+  const WINDOW_MS = 24 * 60 * 60 * 1000;
+  const times = data.map((d) => parseTs(d.timestamp));
+  const result: (number | null)[] = new Array(data.length).fill(null);
+  let sum = 0;
+  let count = 0;
+  let left = 0;
+  for (let i = 0; i < data.length; i++) {
+    const v = data[i][key];
+    if (typeof v === "number") {
+      sum += v;
+      count++;
+    }
+    while (times[left] < times[i] - WINDOW_MS) {
+      const lv = data[left][key];
+      if (typeof lv === "number") {
+        sum -= lv;
+        count--;
+      }
+      left++;
+    }
+    result[i] = count > 0 ? sum / count : null;
+  }
+  return result;
+}
+
 function rangeButtons() {
   return [
     { count: 1, label: "1j", step: "day", stepmode: "backward" },
@@ -117,6 +159,13 @@ export default function Dashboard({ citiesMeta, citiesData }: Props) {
         name: "Ressenti (°C)",
         mode: "lines",
         line: { color: "#b8860b", width: 1.3 },
+      },
+      {
+        x: timestamps,
+        y: movingAverage24h(data, "temperature_2m"),
+        name: "Moyenne mobile 24h (°C)",
+        mode: "lines",
+        line: { color: "#34495e", width: 2, dash: "dash" },
       },
       {
         x: timestamps,
