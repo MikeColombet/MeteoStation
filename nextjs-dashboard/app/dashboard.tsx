@@ -41,11 +41,12 @@ function parseTs(ts: string): number {
 // Moyenne mobile sur une fenêtre glissante de 24h (en temps réel, pas en
 // nombre de points, pour rester correcte même avec un échantillonnage
 // irrégulier : historique horaire, relevés 15 min, etc.)
-function movingAverage24h(
+function movingAverage(
   data: WeatherRow[],
   key: keyof WeatherRow,
+  windowHours: number,
 ): (number | null)[] {
-  const WINDOW_MS = 24 * 60 * 60 * 1000;
+  const WINDOW_MS = windowHours * 60 * 60 * 1000;
   const times = data.map((d) => parseTs(d.timestamp));
   const result: (number | null)[] = new Array(data.length).fill(null);
   let sum = 0;
@@ -162,10 +163,17 @@ export default function Dashboard({ citiesMeta, citiesData }: Props) {
       },
       {
         x: timestamps,
-        y: movingAverage24h(data, "temperature_2m"),
+        y: movingAverage(data, "temperature_2m", 24),
         name: "Moyenne mobile 24h (°C)",
         mode: "lines",
         line: { color: "#34495e", width: 2, dash: "dash" },
+      },
+      {
+        x: timestamps,
+        y: movingAverage(data, "temperature_2m", 72),
+        name: "Moyenne mobile 72h (°C)",
+        mode: "lines",
+        line: { color: "#8e44ad", width: 2, dash: "dot" },
       },
       {
         x: timestamps,

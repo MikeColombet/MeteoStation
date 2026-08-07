@@ -298,11 +298,11 @@ function parseTs(ts) {
   return Date.UTC(y, mo - 1, d, h, mi);
 }
 
-// Moyenne mobile sur une fenêtre glissante de 24h (en temps réel, pas en
-// nombre de points, pour rester correcte même avec un échantillonnage
+// Moyenne mobile sur une fenêtre glissante de N heures (en temps réel, pas
+// en nombre de points, pour rester correcte même avec un échantillonnage
 // irrégulier : historique horaire, relevés 15 min, etc.)
-function movingAverage24h(data, key) {
-  const WINDOW_MS = 24 * 60 * 60 * 1000;
+function movingAverage(data, key, windowHours) {
+  const WINDOW_MS = windowHours * 60 * 60 * 1000;
   const times = data.map(d => parseTs(d.timestamp));
   const result = new Array(data.length).fill(null);
   let sum = 0, count = 0, left = 0;
@@ -406,7 +406,8 @@ function buildTraces(data) {
     temp: [
       { x: timestamps, y: s("temperature_2m"), name: "Température (°C)", mode: "lines", line: { color: "#c0392b", width: 1.5 } },
       { x: timestamps, y: s("apparent_temperature"), name: "Ressenti (°C)", mode: "lines", line: { color: "#b8860b", width: 1.3 } },
-      { x: timestamps, y: movingAverage24h(data, "temperature_2m"), name: "Moyenne mobile 24h (°C)", mode: "lines", line: { color: "#34495e", width: 2, dash: "dash" } },
+      { x: timestamps, y: movingAverage(data, "temperature_2m", 24), name: "Moyenne mobile 24h (°C)", mode: "lines", line: { color: "#34495e", width: 2, dash: "dash" } },
+      { x: timestamps, y: movingAverage(data, "temperature_2m", 72), name: "Moyenne mobile 72h (°C)", mode: "lines", line: { color: "#8e44ad", width: 2, dash: "dot" } },
       { x: timestamps, y: s("relative_humidity_2m"), name: "Humidité (%)", mode: "lines", line: { color: "#2980b9", width: 1.1 }, yaxis: "y2", opacity: 0.6 },
     ],
     wind: [
