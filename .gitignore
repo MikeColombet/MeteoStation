@@ -6,3 +6,10 @@ __pycache__/
 *.pyc
 .DS_Store
 *.log
+
+# Fichiers régénérés localement (par generate_dashboard.py / plot_weather.py)
+# : pas besoin de les versionner, GitHub Actions les reconstruit à chaque
+# déploiement.
+weather_dashboard.html
+weather_chart*.png
+site/
