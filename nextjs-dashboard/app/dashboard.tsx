@@ -141,6 +141,7 @@ export default function Dashboard({ citiesMeta, citiesData }: Props) {
   const cityName =
     citiesMeta.find((c) => c.slug === currentSlug)?.name ?? currentSlug;
   const colors = themeColors(isDark);
+  const latest = data.length ? data[data.length - 1] : null;
 
   const timestamps = useMemo(() => data.map((d) => d.timestamp), [data]);
   const series = (key: keyof WeatherRow) => data.map((d) => d[key]);
@@ -356,7 +357,30 @@ export default function Dashboard({ citiesMeta, citiesData }: Props) {
         </div>
       </div>
 
-      <div className="bg-card border border-border rounded-xl p-4 mt-5 mb-5">
+      <div className="bg-card border border-border rounded-xl p-6 mt-5 mb-5 text-center">
+        <div
+          className="text-6xl font-bold leading-none"
+          style={{ color: "#c0392b" }}
+        >
+          {latest && typeof latest.temperature_2m === "number"
+            ? `${latest.temperature_2m.toFixed(1)}°C`
+            : "--°C"}
+        </div>
+        <div className="text-sm text-muted mt-2.5">
+          {latest
+            ? [
+                typeof latest.apparent_temperature === "number"
+                  ? `ressenti ${latest.apparent_temperature.toFixed(1)}°C`
+                  : null,
+                `relevé le ${latest.timestamp.replace("T", " à ")}`,
+              ]
+                .filter(Boolean)
+                .join(" — ")
+            : "Pas encore de données pour cette ville."}
+        </div>
+      </div>
+
+      <div className="bg-card border border-border rounded-xl p-4 mb-5">
         <h2 className="text-sm font-semibold mb-2">Température & humidité</h2>
         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
         <Plot

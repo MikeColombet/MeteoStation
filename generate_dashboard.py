@@ -143,6 +143,21 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     font-size: 13px;
     margin-bottom: 20px;
   }
+  .hero {
+    text-align: center;
+    padding: 28px 16px;
+  }
+  .hero-value {
+    font-size: 64px;
+    font-weight: 700;
+    color: #c0392b;
+    line-height: 1;
+  }
+  .hero-meta {
+    margin-top: 10px;
+    font-size: 13px;
+    color: var(--gray);
+  }
   .card {
     background: var(--card);
     border: 1px solid var(--border);
@@ -220,6 +235,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     <select id="city-select"></select>
     <button id="theme-toggle">🌙 Mode nuit</button>
   </div>
+</div>
+
+<div class="card hero">
+  <div class="hero-value" id="hero-temp">--°C</div>
+  <div class="hero-meta" id="hero-meta"></div>
 </div>
 
 <div class="card">
@@ -531,7 +551,28 @@ function renderSubtitle() {
     : "Pas encore de données pour cette ville.";
 }
 
+function renderHero() {
+  const data = currentData();
+  const heroEl = document.getElementById("hero-temp");
+  const metaEl = document.getElementById("hero-meta");
+  if (!data.length) {
+    heroEl.textContent = "--°C";
+    metaEl.textContent = "Pas encore de données pour cette ville.";
+    return;
+  }
+  const last = data[data.length - 1];
+  const temp = last.temperature_2m;
+  heroEl.textContent = (temp !== null && temp !== undefined) ? temp.toFixed(1) + "°C" : "--°C";
+  const parts = [];
+  if (last.apparent_temperature !== null && last.apparent_temperature !== undefined) {
+    parts.push("ressenti " + last.apparent_temperature.toFixed(1) + "°C");
+  }
+  parts.push("relevé le " + last.timestamp.replace("T", " à "));
+  metaEl.textContent = parts.join(" — ");
+}
+
 function renderAll() {
+  renderHero();
   renderSubtitle();
   renderCharts();
   renderTable();
