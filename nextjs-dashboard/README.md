@@ -28,28 +28,15 @@ npm run dev
 ```
 Ouvre http://localhost:3000
 
-## Build + déploiement sur Netlify (site séparé)
+## Build
 
-Une seule fois :
 ```bash
-netlify login
-cd nextjs-dashboard && netlify init   # crée un nouveau site Netlify, distinct de mikemeteostation
+npm run build
 ```
-
-Ensuite, à chaque publication :
-```bash
-./deploy.sh
-```
-(ou manuellement : `npm run build && netlify deploy --prod --dir=out`)
-
-## Ajouter cette version à l'automatisation existante
-
-Le cycle `launchd` actuel (`deploy.sh` à la racine, toutes les 10 min) ne
-touche que le dashboard HTML. Pour publier aussi cette version Next.js
-automatiquement, il suffirait d'ajouter un appel à
-`nextjs-dashboard/deploy.sh` dans le `deploy.sh` racine — pas fait par
-défaut car un build Next.js est plus long qu'une génération HTML et
-ralentirait le cycle de 10 minutes. À faire sur demande.
+Génère l'export statique dans `out/` (`output: "export"` dans
+`next.config.ts`). Aucune plateforme de déploiement n'est configurée pour
+l'instant — ce dossier `out/` est à publier manuellement où on le souhaite
+si besoin.
 
 ## Structure
 

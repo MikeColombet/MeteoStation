@@ -60,9 +60,9 @@ previous launchd/local-cron setup has been removed):
 
 The Next.js dashboard is NOT part of this workflow — it reads the CSVs at
 `next build` time from the parent directory, so it only reflects data as of
-whenever it was last built and redeployed (manually, to a separate Netlify
-site). See `nextjs-dashboard/README.md` for its own build/deploy story if
-asked to touch it.
+whenever it was last built. It has no deployment target configured (the
+prior Netlify setup was removed); `npm run build` produces a static export
+in `out/` to publish manually if/when needed.
 
 ## Commands
 
@@ -83,9 +83,10 @@ npm install
 npm run dev     # local dev server, http://localhost:3000
 npm run build   # static export to out/ (output: "export" in next.config.ts)
 npm run lint    # eslint
-./deploy.sh     # npm run build && netlify deploy --prod --dir=out
 ```
-No test suite is configured for the Next.js app either.
+No test suite is configured for the Next.js app either. No deployment
+target is configured — `out/` is a plain static export to publish manually
+wherever needed.
 
 ## Working on this codebase
 
