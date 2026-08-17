@@ -33,7 +33,7 @@ jobs:
           python-version: "3.12"
 
       - name: Installer les dépendances
-        run: pip install requests
+        run: pip install requests==2.32.5
 
       - name: Récupérer les données actuelles
         run: python3 fetch_weather.py
