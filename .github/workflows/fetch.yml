@@ -46,8 +46,33 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add weather_data_*.csv
-          git diff --cached --quiet || git commit -m "Mise à jour automatique des données météo"
-          git push
+          if git diff --cached --quiet; then
+            echo "Rien à committer."
+            exit 0
+          fi
+          git commit -m "Mise à jour automatique des données météo"
+
+          # Un push manuel concurrent (ou un futur run qui chevaucherait
+          # celui-ci) peut faire diverger la branche entre le checkout et
+          # ce push : on retente avec rebase plutôt que de laisser le run
+          # échouer et sauter la génération/publication du dashboard.
+          max_attempts=5
+          attempt=1
+          while ! git push; do
+            if [ "$attempt" -ge "$max_attempts" ]; then
+              echo "::error::Échec du push après $max_attempts tentatives"
+              exit 1
+            fi
+            echo "Push rejeté (tentative $attempt/$max_attempts), rebase sur origin/main puis nouvel essai..."
+            git fetch origin main
+            if ! git rebase origin/main; then
+              git rebase --abort
+              echo "::error::Conflit lors du rebase sur origin/main (probablement un chevauchement sur les mêmes lignes de CSV) — intervention manuelle requise"
+              exit 1
+            fi
+            attempt=$((attempt + 1))
+            sleep $((attempt * 3))
+          done
 
       - name: Générer le dashboard
         run: |
